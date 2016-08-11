@@ -73,6 +73,8 @@ class ImageWriter(object):
         (width, height) = image.srcsize
         if len(filters) == 1 and filters[0][0] in LITERALS_DCT_DECODE:
             ext = '.jpg'
+        elif image.bits == 8 and image.colorspace is LITERAL_DEVICE_RGB:
+            ext = '.png'
         elif (image.bits == 1 or
               image.bits == 8 and image.colorspace in (LITERAL_DEVICE_RGB, LITERAL_DEVICE_GRAY)):
             ext = '.%dx%d.bmp' % (width, height)
@@ -80,10 +82,10 @@ class ImageWriter(object):
             ext = '.%d.%dx%d.img' % (image.bits, width, height)
         name = image.name+ext
         path = os.path.join(self.outdir, name)
-        fp = file(path, 'wb')
+        fp = open(path, 'wb')
         if ext == '.jpg':
             raw_data = stream.get_rawdata()
-            if LITERAL_DEVICE_CMYK in image.colorspace:
+            if image.colorspace is LITERAL_DEVICE_CMYK:
                 from PIL import Image
                 from PIL import ImageChops
                 ifp = BytesIO(raw_data)
@@ -93,6 +95,14 @@ class ImageWriter(object):
                 i.save(fp, 'JPEG')
             else:
                 fp.write(raw_data)
+        elif ext == '.png':
+            data = stream.get_data()
+            from PIL import  Image
+            i = Image.frombytes('RGB', image.srcsize, data)
+            if image.smask_stream:
+                smask = Image.frombytes('L', image.srcsize, image.smask_stream.get_data())
+                i.putalpha(smask)
+            i.save(fp, 'PNG')
         elif image.bits == 1:
             bmp = BMPWriter(fp, 1, width, height)
             data = stream.get_data()
