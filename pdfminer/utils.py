@@ -63,12 +63,14 @@ def apply_png_predictor(pred, colors, columns, bitspercomponent, data):
             line2 += line1
         elif ft == 1:
             # PNG sub (UNTESTED)
-            c = 0
+            c = [0] * colors
+            color_index = 0
             for b in line1:
                 if six.PY2:
                     b = six.byte2int(b)
-                c = (c+b) & 255
-                line2 += six.int2byte(c)
+                c[color_index] = (c[color_index]+b) & 255
+                line2 += six.int2byte(c[color_index])
+                color_index = (color_index + 1) % 3
         elif ft == 2:
             # PNG up
             for (a, b) in zip(line0, line1):
@@ -78,19 +80,41 @@ def apply_png_predictor(pred, colors, columns, bitspercomponent, data):
                 line2 += six.int2byte(c)
         elif ft == 3:
             # PNG average (UNTESTED)
-            c = 0
+            c = [0] * colors
+            color_index = 0
             for (a, b) in zip(line0, line1):
                 if six.PY2:
                     a, b = six.byte2int(a), six.byte2int(b)
-                c = ((c+a+b)//2) & 255
-                line2 += six.int2byte(c)
+                c[color_index] = (b + ((c[color_index]+a)//2)) & 255
+                line2 += six.int2byte(c[color_index])
+                color_index = (color_index + 1) % 3
         else:
-            # unsupported
-            raise ValueError(ft)
+            # PNG Paeth (UNTESTED)
+            left = [0] * colors
+            above_left = [0] * colors
+            color_index = 0
+            for (above, encoded) in zip(line0, line1):
+                if six.PY2:
+                    above, encoded = six.byte2int(above), six.byte2int(encoded)
+                paeth = paeth_predictor(left[color_index], above, above_left[color_index])
+                left[color_index] = (encoded + paeth) & 255
+                above_left[color_index] = above
+                line2 += six.int2byte(left[color_index])
+                color_index = (color_index + 1) % 3
         buf += line2
         line0 = line2
     return buf
 
+##  Paeth Predictor
+##
+def paeth_predictor(left, above, above_left):
+    p = left + above - above_left
+    p_left = abs(p - left)
+    p_above = abs(p - above)
+    p_above_left = abs(p - above_left)
+    if p_left <= p_above and p_left <= p_above_left: return left
+    if p_above <= p_above_left: return above
+    return above_left
 
 ##  Matrix operations
 ##
