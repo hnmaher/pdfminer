@@ -46,7 +46,7 @@ class PDFDevice(object):
     def paint_path(self, graphicstate, stroke, fill, evenodd, path):
         return
 
-    def render_image(self, name, stream):
+    def render_image(self, name, stream, smask_stream=None):
         return
 
     def render_string(self, textstate, seq):

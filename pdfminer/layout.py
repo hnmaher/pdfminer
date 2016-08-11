@@ -187,7 +187,7 @@ class LTRect(LTCurve):
 ##
 class LTImage(LTComponent):
 
-    def __init__(self, name, stream, bbox):
+    def __init__(self, name, stream, bbox, smask_stream=None):
         LTComponent.__init__(self, bbox)
         self.name = name
         self.stream = stream
@@ -196,8 +196,7 @@ class LTImage(LTComponent):
         self.imagemask = stream.get_any(('IM', 'ImageMask'))
         self.bits = stream.get_any(('BPC', 'BitsPerComponent'), 1)
         self.colorspace = stream.get_any(('CS', 'ColorSpace'))
-        if not isinstance(self.colorspace, list):
-            self.colorspace = [self.colorspace]
+        self.smask_stream = smask_stream
         return
 
     def __repr__(self):

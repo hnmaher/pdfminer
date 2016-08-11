@@ -68,11 +68,12 @@ class PDFLayoutAnalyzer(PDFTextDevice):
         self.cur_item.add(fig)
         return
 
-    def render_image(self, name, stream):
+    def render_image(self, name, stream, smask_stream=None):
         assert isinstance(self.cur_item, LTFigure)
         item = LTImage(name, stream,
                        (self.cur_item.x0, self.cur_item.y0,
-                        self.cur_item.x1, self.cur_item.y1))
+                        self.cur_item.x1, self.cur_item.y1),
+                       smask_stream)
         self.cur_item.add(item)
         return
 
@@ -213,10 +214,10 @@ class TextConverter(PDFConverter):
     # Some dummy functions to save memory/CPU when all that is wanted
     # is text.  This stops all the image and drawing ouput from being
     # recorded and taking up RAM.
-    def render_image(self, name, stream):
+    def render_image(self, name, stream, smask_stream=None):
         if self.imagewriter is None:
             return
-        PDFConverter.render_image(self, name, stream)
+        PDFConverter.render_image(self, name, stream, smask_stream)
         return
 
     def paint_path(self, gstate, stroke, fill, evenodd, path):

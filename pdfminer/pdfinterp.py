@@ -814,7 +814,11 @@ class PDFPageInterpreter(object):
             self.device.end_figure(xobjid)
         elif subtype is LITERAL_IMAGE and 'Width' in xobj and 'Height' in xobj:
             self.device.begin_figure(xobjid, (0, 0, 1, 1), MATRIX_IDENTITY)
-            self.device.render_image(xobjid, xobj)
+            smask_ref = xobj.get('SMask', None)
+            smask_stream = None
+            if smask_ref:
+                smask_stream = stream_value(smask_ref)
+            self.device.render_image(xobjid, xobj, smask_stream)
             self.device.end_figure(xobjid)
         else:
             # unsupported xobject type.
